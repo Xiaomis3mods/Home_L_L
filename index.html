@@ -3,14 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Triciclos L&L - Uber App</title>
-
-<link rel="manifest" href="manifest.json">
+<title>Triciclos L&L - Pro</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
-
 body{
 margin:0;
 font-family:Arial;
@@ -18,7 +15,6 @@ background:#f5f5f5;
 color:#111;
 }
 
-/* HEADER */
 header{
 height:220px;
 background:
@@ -33,14 +29,10 @@ color:white;
 flex-direction:column;
 }
 
-header h1{margin:0;font-size:34px;}
+header h1{margin:0;font-size:36px;}
 header p{margin-top:8px;font-size:16px;}
 
-.container{
-max-width:900px;
-margin:auto;
-padding:15px;
-}
+.container{max-width:900px;margin:auto;padding:15px;}
 
 .card{
 background:white;
@@ -71,10 +63,7 @@ cursor:pointer;
 
 button:hover{background:#900;}
 
-.servicios{
-display:flex;
-gap:10px;
-}
+.servicios{display:flex;gap:10px;}
 
 .tipo{
 flex:1;
@@ -90,23 +79,7 @@ border-color:#c40000;
 background:#ffe5e5;
 }
 
-#map{
-height:250px;
-border-radius:10px;
-margin-top:10px;
-}
-
-table{
-width:100%;
-font-size:13px;
-border-collapse:collapse;
-}
-
-td,th{
-border:1px solid #ddd;
-padding:5px;
-text-align:center;
-}
+#map{height:260px;border-radius:10px;margin-top:10px;}
 
 .badge{
 padding:5px 8px;
@@ -119,16 +92,6 @@ font-size:11px;
 .aceptado{background:blue;}
 .camino{background:green;}
 .finalizado{background:black;}
-
-.admin{
-background:#111;
-color:white;
-padding:8px;
-margin:5px 0;
-border-radius:8px;
-font-size:13px;
-}
-
 </style>
 </head>
 
@@ -141,7 +104,6 @@ font-size:13px;
 
 <div class="container">
 
-<!-- MAPA -->
 <div class="card">
 <h2>🗺️ Mapa</h2>
 <div id="map"></div>
@@ -150,7 +112,6 @@ font-size:13px;
 <p>Distancia: <span id="dist">--</span></p>
 </div>
 
-<!-- RESERVA -->
 <div class="card">
 <h2>🛺 Reserva</h2>
 
@@ -161,39 +122,19 @@ font-size:13px;
 <textarea id="detalle" placeholder="Detalles"></textarea>
 
 <div class="servicios">
-<div class="tipo activo" onclick="tipo='eco';select(this)">Económico</div>
-<div class="tipo" onclick="tipo='vip';select(this)">Ejecutivo</div>
+<div class="tipo activo" onclick="setTipo(this,'eco')">Económico</div>
+<div class="tipo" onclick="setTipo(this,'vip')">Ejecutivo</div>
 </div>
 
 <br>
-
 <button onclick="reservar()">📲 Solicitar viaje</button>
 </div>
 
-<!-- HISTORIAL -->
 <div class="card">
 <h2>📋 Historial</h2>
-<table>
-<thead>
-<tr>
-<th>Cliente</th>
-<th>Ruta</th>
-<th>Estado</th>
-<th>Acción</th>
-</tr>
-</thead>
+<table width="100%">
 <tbody id="tabla"></tbody>
 </table>
-</div>
-
-<!-- CONDUCTORES -->
-<div class="card">
-<h2>👨‍✈️ Conductores</h2>
-
-<div class="admin">Juan - Libre</div>
-<div class="admin">Pedro - En ruta</div>
-<div class="admin">Carlos - Libre</div>
-
 </div>
 
 </div>
@@ -205,7 +146,7 @@ font-size:13px;
 let tipo="eco";
 let viajes = JSON.parse(localStorage.getItem("viajes")||"[]");
 
-let map = L.map('map').setView([40.7128,-74.0060],13);
+let map = L.map('map').setView([45.5019,-73.5674],12);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
@@ -213,35 +154,43 @@ let origen=null;
 let destino=null;
 let m1,m2;
 
+function formatCoord(c){
+if(!c) return "No definido";
+if(typeof c === "string") return c;
+return `${c[0].toFixed(5)}, ${c[1].toFixed(5)}`;
+}
+
 navigator.geolocation.getCurrentPosition(pos=>{
 origen=[pos.coords.latitude,pos.coords.longitude];
-map.setView(origen,15);
+map.setView(origen,14);
 m1=L.marker(origen).addTo(map).bindPopup("Origen");
-document.getElementById("ori").innerText=origen;
+document.getElementById("ori").innerText=formatCoord(origen);
+},()=>{
+document.getElementById("ori").innerText="No disponible";
 });
 
 map.on("click",e=>{
 destino=[e.latlng.lat,e.latlng.lng];
 if(m2) map.removeLayer(m2);
 m2=L.marker(destino).addTo(map).bindPopup("Destino");
-document.getElementById("des").innerText=destino;
+document.getElementById("des").innerText=formatCoord(destino);
 calcular();
 });
 
 function calcular(){
 if(!origen||!destino)return;
-let d=map.distance(origen,destino)/1000;
+let d = map.distance(origen,destino)/1000;
 document.getElementById("dist").innerText=d.toFixed(2)+" km";
 }
 
 function reservar(){
 
 let v={
-n:nombre.value,
-t:telefono.value,
-o:origenTxt.value||origen,
-d:destinoTxt.value||destino,
-detalle:detalle.value,
+n:document.getElementById("nombre").value,
+t:document.getElementById("telefono").value,
+o:document.getElementById("origenTxt").value || formatCoord(origen),
+d:document.getElementById("destinoTxt").value || formatCoord(destino),
+detalle:document.getElementById("detalle").value,
 estado:"pendiente",
 tipo:tipo
 };
@@ -250,60 +199,40 @@ viajes.push(v);
 localStorage.setItem("viajes",JSON.stringify(viajes));
 render();
 
-let msg=`🛺 Triciclos L&L
-${v.n}
-${v.o} → ${v.d}
-Tipo:${v.tipo}`;
+let msg =
+`🛺 Triciclos L&L
+👤 ${v.n}
+📞 ${v.t}
+📍 ${v.o} → ${v.d}
+🚖 Tipo: ${v.tipo}
+📝 ${v.detalle}`;
 
 window.open("https://wa.me/5354632153?text="+encodeURIComponent(msg));
 
 }
 
-function cambiar(i){
-
-let estados=["pendiente","aceptado","camino","finalizado"];
-
-let actual=estados.indexOf(viajes[i].estado);
-viajes[i].estado=estados[(actual+1)%4];
-
-localStorage.setItem("viajes",JSON.stringify(viajes));
-render();
-
+function setTipo(el,t){
+tipo=t;
+document.querySelectorAll(".tipo").forEach(e=>e.classList.remove("activo"));
+el.classList.add("activo");
 }
 
 function render(){
-
 let tb=document.getElementById("tabla");
 tb.innerHTML="";
 
 viajes.forEach((v,i)=>{
-
 tb.innerHTML+=`
 <tr>
 <td>${v.n}</td>
 <td>${v.o} → ${v.d}</td>
 <td><span class="badge ${v.estado}">${v.estado}</span></td>
-<td><button onclick="cambiar(${i})">Cambiar</button></td>
-</tr>
-`;
-
+</tr>`;
 });
-
-}
-
-function select(el){
-document.querySelectorAll(".tipo").forEach(e=>e.classList.remove("activo"));
-el.classList.add("activo");
 }
 
 render();
 
-</script>
-
-<script>
-if('serviceWorker' in navigator){
-navigator.serviceWorker.register('sw.js');
-}
 </script>
 
 </body>
