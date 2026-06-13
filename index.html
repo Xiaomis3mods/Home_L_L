@@ -63,22 +63,6 @@ cursor:pointer;
 
 button:hover{background:#900;}
 
-.servicios{display:flex;gap:10px;}
-
-.tipo{
-flex:1;
-padding:10px;
-border:2px solid #ddd;
-border-radius:10px;
-text-align:center;
-cursor:pointer;
-}
-
-.tipo.activo{
-border-color:#c40000;
-background:#ffe5e5;
-}
-
 #map{height:260px;border-radius:10px;margin-top:10px;}
 
 .badge{
@@ -119,12 +103,7 @@ font-size:11px;
 <input id="telefono" placeholder="Teléfono">
 <input id="origenTxt" placeholder="Origen manual">
 <input id="destinoTxt" placeholder="Destino manual">
-<textarea id="detalle" placeholder="Detalles"></textarea>
-
-<div class="servicios">
-<div class="tipo activo" onclick="setTipo(this,'eco')">Económico</div>
-<div class="tipo" onclick="setTipo(this,'vip')">Ejecutivo</div>
-</div>
+<textarea id="detalle" placeholder="Detalles del viaje"></textarea>
 
 <br>
 <button onclick="reservar()">📲 Solicitar viaje</button>
@@ -143,7 +122,6 @@ font-size:11px;
 
 <script>
 
-let tipo="eco";
 let viajes = JSON.parse(localStorage.getItem("viajes")||"[]");
 
 let map = L.map('map').setView([45.5019,-73.5674],12);
@@ -160,6 +138,7 @@ if(typeof c === "string") return c;
 return `${c[0].toFixed(5)}, ${c[1].toFixed(5)}`;
 }
 
+// ORIGEN GPS
 navigator.geolocation.getCurrentPosition(pos=>{
 origen=[pos.coords.latitude,pos.coords.longitude];
 map.setView(origen,14);
@@ -169,6 +148,7 @@ document.getElementById("ori").innerText=formatCoord(origen);
 document.getElementById("ori").innerText="No disponible";
 });
 
+// DESTINO CLICK MAPA
 map.on("click",e=>{
 destino=[e.latlng.lat,e.latlng.lng];
 if(m2) map.removeLayer(m2);
@@ -183,6 +163,7 @@ let d = map.distance(origen,destino)/1000;
 document.getElementById("dist").innerText=d.toFixed(2)+" km";
 }
 
+// RESERVA
 function reservar(){
 
 let v={
@@ -191,8 +172,7 @@ t:document.getElementById("telefono").value,
 o:document.getElementById("origenTxt").value || formatCoord(origen),
 d:document.getElementById("destinoTxt").value || formatCoord(destino),
 detalle:document.getElementById("detalle").value,
-estado:"pendiente",
-tipo:tipo
+estado:"pendiente"
 };
 
 viajes.push(v);
@@ -204,19 +184,12 @@ let msg =
 👤 ${v.n}
 📞 ${v.t}
 📍 ${v.o} → ${v.d}
-🚖 Tipo: ${v.tipo}
 📝 ${v.detalle}`;
 
 window.open("https://wa.me/5354632153?text="+encodeURIComponent(msg));
-
 }
 
-function setTipo(el,t){
-tipo=t;
-document.querySelectorAll(".tipo").forEach(e=>e.classList.remove("activo"));
-el.classList.add("activo");
-}
-
+// HISTORIAL
 function render(){
 let tb=document.getElementById("tabla");
 tb.innerHTML="";
