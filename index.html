@@ -88,27 +88,29 @@ font-size:11px;
 
 <div class="container">
 
+<!-- MAPA SOLO UBICACIÓN -->
 <div class="card">
-<h2>🗺️ Mapa</h2>
+<h2>🗺️ Ubicación actual</h2>
 <div id="map"></div>
-<p>Origen: <span id="ori">Detectando...</span></p>
-<p>Destino: <span id="des">Toca el mapa</span></p>
-<p>Distancia: <span id="dist">--</span></p>
 </div>
 
+<!-- RESERVA -->
 <div class="card">
 <h2>🛺 Reserva</h2>
 
 <input id="nombre" placeholder="Nombre">
 <input id="telefono" placeholder="Teléfono">
-<input id="origenTxt" placeholder="Origen manual">
-<input id="destinoTxt" placeholder="Destino manual">
+
+<input id="origenTxt" placeholder="Origen">
+<input id="destinoTxt" placeholder="Destino (selecciona en mapa)">
+
 <textarea id="detalle" placeholder="Detalles del viaje"></textarea>
 
 <br>
 <button onclick="reservar()">📲 Solicitar viaje</button>
 </div>
 
+<!-- HISTORIAL -->
 <div class="card">
 <h2>📋 Historial</h2>
 <table width="100%">
@@ -124,44 +126,31 @@ font-size:11px;
 
 let viajes = JSON.parse(localStorage.getItem("viajes")||"[]");
 
-let map = L.map('map').setView([45.5019,-73.5674],12);
+// MAPA INICIAL
+let map = L.map('map').setView([45.5019,-73.5674],13);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-let origen=null;
-let destino=null;
-let m1,m2;
+let marker = null;
 
-function formatCoord(c){
-if(!c) return "No definido";
-if(typeof c === "string") return c;
-return `${c[0].toFixed(5)}, ${c[1].toFixed(5)}`;
-}
-
-// ORIGEN GPS
+// SOLO UBICACIÓN ACTUAL
 navigator.geolocation.getCurrentPosition(pos=>{
-origen=[pos.coords.latitude,pos.coords.longitude];
-map.setView(origen,14);
-m1=L.marker(origen).addTo(map).bindPopup("Origen");
-document.getElementById("ori").innerText=formatCoord(origen);
-},()=>{
-document.getElementById("ori").innerText="No disponible";
+let user = [pos.coords.latitude,pos.coords.longitude];
+map.setView(user,15);
+
+// SOLO UN MARCADOR DE UBICACIÓN
+marker = L.marker(user).addTo(map)
+.bindPopup("Estás aquí").openPopup();
+
+document.getElementById("origenTxt").value =
+`${user[0].toFixed(5)}, ${user[1].toFixed(5)}`;
 });
 
-// DESTINO CLICK MAPA
+// DESTINO SOLO SE GUARDA EN FORMULARIO (NO MAPA)
 map.on("click",e=>{
-destino=[e.latlng.lat,e.latlng.lng];
-if(m2) map.removeLayer(m2);
-m2=L.marker(destino).addTo(map).bindPopup("Destino");
-document.getElementById("des").innerText=formatCoord(destino);
-calcular();
+document.getElementById("destinoTxt").value =
+`${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
 });
-
-function calcular(){
-if(!origen||!destino)return;
-let d = map.distance(origen,destino)/1000;
-document.getElementById("dist").innerText=d.toFixed(2)+" km";
-}
 
 // RESERVA
 function reservar(){
@@ -169,8 +158,8 @@ function reservar(){
 let v={
 n:document.getElementById("nombre").value,
 t:document.getElementById("telefono").value,
-o:document.getElementById("origenTxt").value || formatCoord(origen),
-d:document.getElementById("destinoTxt").value || formatCoord(destino),
+o:document.getElementById("origenTxt").value,
+d:document.getElementById("destinoTxt").value,
 detalle:document.getElementById("detalle").value,
 estado:"pendiente"
 };
@@ -194,7 +183,7 @@ function render(){
 let tb=document.getElementById("tabla");
 tb.innerHTML="";
 
-viajes.forEach((v,i)=>{
+viajes.forEach(v=>{
 tb.innerHTML+=`
 <tr>
 <td>${v.n}</td>
