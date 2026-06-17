@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Triciclos L&L - Control GPS</title>
+<title>Triciclos L&L - GPS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -13,24 +13,85 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#111;color:#fff;}
-header{background:red;padding:15px;text-align:center;font-weight:bold;}
-button{padding:10px;margin:5px;border:none;cursor:pointer;border-radius:6px;}
-input,select{padding:10px;margin:5px;width:90%;border-radius:6px;border:none;}
-#loginBox,#adminPanel,#driverPanel{display:none;padding:20px;}
-#map{height:400px;width:100%;margin-top:10px;}
-.card{background:#222;padding:10px;margin:10px 0;border-radius:8px;}
+body{
+margin:0;
+font-family:Arial;
+background:#000;
+color:#fff;
+}
+
+/* HEADER */
+header{
+background:red;
+padding:10px;
+text-align:center;
+font-weight:bold;
+position:relative;
+z-index:10;
+}
+
+/* MAPA FULL SCREEN */
+#map{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100vh;
+z-index:1;
+}
+
+/* PANELES */
+#loginBox,#adminPanel,#driverPanel{
+display:none;
+position:relative;
+z-index:20;
+padding:20px;
+}
+
+/* INPUTS */
+input,select{
+padding:10px;
+margin:5px;
+width:90%;
+border-radius:6px;
+border:none;
+}
+
+/* BOTONES FLOTANTES */
+.fab{
+position:fixed;
+right:15px;
+background:red;
+color:white;
+border:none;
+padding:12px 14px;
+border-radius:50px;
+z-index:999;
+box-shadow:0 4px 10px rgba(0,0,0,0.4);
+font-size:14px;
+}
+
+.fab1{bottom:20px;}
+.fab2{bottom:80px;}
+.fab3{bottom:140px;}
+.fab4{bottom:200px;}
 </style>
 </head>
 
 <body>
 
-<header>🚖 Triciclos L&L - Tu destino, nuestro compromiso</header>
+<header>
+🚖 Triciclos L&L - Tu destino, nuestro compromiso
+</header>
 
+<!-- MAPA -->
+<div id="map"></div>
+
+<!-- LOGIN -->
 <div id="loginBox">
 <h2>Inicio de sesión</h2>
 
-<input id="email" placeholder="Usuario">
+<input id="user" placeholder="Usuario">
 <input id="pass" type="password" placeholder="Contraseña">
 
 <select id="role">
@@ -41,24 +102,31 @@ input,select{padding:10px;margin:5px;width:90%;border-radius:6px;border:none;}
 <button onclick="login()">Entrar</button>
 </div>
 
+<!-- ADMIN -->
 <div id="adminPanel">
-<h2>Panel Administrador</h2>
-<button onclick="logout()">Salir</button>
-<div id="map"></div>
-<h3>Conductores activos</h3>
-<div id="driversList"></div>
+<h2>Admin</h2>
 </div>
 
+<!-- DRIVER -->
 <div id="driverPanel">
-<h2>Panel Conductor</h2>
-<button onclick="startTracking()">Compartir ubicación</button>
-<button onclick="stopTracking()">Detener</button>
-<button onclick="logout()">Salir</button>
-<p id="status">Estado: Offline</p>
+<h2>Conductor</h2>
 </div>
+
+<!-- BOTONES FLOTANTES -->
+<button class="fab fab1" onclick="startTracking()">▶ GPS</button>
+<button class="fab fab2" onclick="stopTracking()">⛔ Parar</button>
+<button class="fab fab3" onclick="logout()">🚪 Salir</button>
 
 <script>
-// Firebase config (opcional)
+
+// ================= MAPA =================
+let map = L.map('map').setView([32.5, -96.8], 12);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+attribution:'Triciclos L&L'
+}).addTo(map);
+
+// ================= FIREBASE =================
 const firebaseConfig = {
 apiKey: "TU_API_KEY",
 authDomain: "TU_PROJECT.firebaseapp.com",
@@ -73,111 +141,88 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
-let map;
-let markers = {};
 let watchId;
+let markers = {};
 
-// 🔐 LOGIN
+// ================= LOGIN =================
 function login(){
-let user=document.getElementById("email").value;
-let pass=document.getElementById("pass").value;
-let role=document.getElementById("role").value;
+let u = document.getElementById("user").value;
+let p = document.getElementById("pass").value;
+let r = document.getElementById("role").value;
 
-// ADMIN LOCAL (SIN FIREBASE)
-if(role==="admin"){
-if(user==="Leuris" && pass==="uber981016"){
-showAdmin();
+// ADMIN LOCAL
+if(r === "admin"){
+if(u === "Leuris" && p === "uber981016"){
+alert("Bienvenido Admin");
 return;
 }else{
-alert("Credenciales de administrador incorrectas");
+alert("Error admin");
 return;
 }
 }
 
-// DRIVER LOGIN (FIREBASE)
-auth.signInWithEmailAndPassword(user,pass)
-.then(()=>showDriver())
+// CONDUCTOR (FIREBASE)
+auth.signInWithEmailAndPassword(u,p)
+.then(()=>alert("Conductor conectado"))
 .catch(e=>alert(e.message));
 }
 
-function logout(){
-auth.signOut().catch(()=>{});
-location.reload();
-}
-
-// ADMIN
-function showAdmin(){
-document.getElementById("loginBox").style.display="none";
-document.getElementById("adminPanel").style.display="block";
-
-map=L.map('map').setView([32.5,-96.8],12);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-db.ref("drivers").on("value",snap=>{
-let data=snap.val()||{};
-document.getElementById("driversList").innerHTML="";
-
-for(let id in data){
-let d=data[id];
-
-document.getElementById("driversList").innerHTML+=
-`<div class='card'><b>${d.email}</b><br>${d.status}</div>`;
-
-if(d.lat){
-if(!markers[id]){
-markers[id]=L.marker([d.lat,d.lng]).addTo(map);
-}else{
-markers[id].setLatLng([d.lat,d.lng]);
-}
-}
-}
-});
-}
-
-// DRIVER
-function showDriver(){
-document.getElementById("loginBox").style.display="none";
-document.getElementById("driverPanel").style.display="block";
-}
-
+// ================= GPS =================
 function startTracking(){
-document.getElementById("status").innerText="Estado: Disponible";
 
-watchId=navigator.geolocation.watchPosition(pos=>{
-let lat=pos.coords.latitude;
-let lng=pos.coords.longitude;
+document.getElementById("map").style.height = "100vh";
 
-let user=auth.currentUser;
+watchId = navigator.geolocation.watchPosition(pos=>{
+let lat = pos.coords.latitude;
+let lng = pos.coords.longitude;
+
+let user = auth.currentUser;
 if(!user) return;
 
 db.ref("drivers/"+user.uid).set({
 email:user.email,
 lat:lat,
 lng:lng,
-status:"Disponible"
+status:"Activo"
 });
+
 });
+
 }
 
 function stopTracking(){
 navigator.geolocation.clearWatch(watchId);
-let user=auth.currentUser;
+
+let user = auth.currentUser;
 if(user){
 db.ref("drivers/"+user.uid).update({status:"Offline"});
 }
-document.getElementById("status").innerText="Estado: Offline";
 }
 
-auth.onAuthStateChanged(user=>{
-if(user){
-document.getElementById("loginBox").style.display="block";
+// ================= LOGOUT =================
+function logout(){
+auth.signOut().catch(()=>{});
+location.reload();
+}
+
+// ================= ADMIN VIEW =================
+db.ref("drivers").on("value",snap=>{
+let data = snap.val() || {};
+
+for(let id in data){
+let d = data[id];
+
+if(d.lat){
+if(!markers[id]){
+markers[id] = L.marker([d.lat,d.lng]).addTo(map)
+.bindPopup(d.email);
+}else{
+markers[id].setLatLng([d.lat,d.lng]);
+}
+}
 }
 });
-</script>
 
-<script>
-document.getElementById("loginBox").style.display="block";
 </script>
 
 </body>
