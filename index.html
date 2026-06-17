@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Triciclos L&L - Control GPS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<style>
+body{margin:0;font-family:Arial;background:#111;color:#fff;}
+header{background:red;padding:15px;text-align:center;font-weight:bold;}
+button{padding:10px;margin:5px;border:none;cursor:pointer;border-radius:6px;}
+input,select{padding:10px;margin:5px;width:90%;border-radius:6px;border:none;}
+#loginBox,#adminPanel,#driverPanel{display:none;padding:20px;}
+#map{height:400px;width:100%;margin-top:10px;}
+.card{background:#222;padding:10px;margin:10px 0;border-radius:8px;}
+</style>
+</head>
+
+<body>
+
+<header>🚖 Triciclos L&L - Tu destino, nuestro compromiso</header>
+
+<div id="loginBox">
+<h2>Inicio de sesión</h2>
+
+<input id="email" placeholder="Usuario">
+<input id="pass" type="password" placeholder="Contraseña">
+
+<select id="role">
+<option value="driver">Conductor</option>
+<option value="admin">Administrador</option>
+</select>
+
+<button onclick="login()">Entrar</button>
+</div>
+
+<div id="adminPanel">
+<h2>Panel Administrador</h2>
+<button onclick="logout()">Salir</button>
+<div id="map"></div>
+<h3>Conductores activos</h3>
+<div id="driversList"></div>
+</div>
+
+<div id="driverPanel">
+<h2>Panel Conductor</h2>
+<button onclick="startTracking()">Compartir ubicación</button>
+<button onclick="stopTracking()">Detener</button>
+<button onclick="logout()">Salir</button>
+<p id="status">Estado: Offline</p>
+</div>
+
+<script>
+// Firebase config (opcional)
+const firebaseConfig = {
+apiKey: "TU_API_KEY",
+authDomain: "TU_PROJECT.firebaseapp.com",
+databaseURL: "https://TU_PROJECT.firebaseio.com",
+projectId: "TU_PROJECT",
+storageBucket: "TU_PROJECT.appspot.com",
+messagingSenderId: "XXXX",
+appId: "XXXX"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+let map;
+let markers = {};
+let watchId;
+
+// 🔐 LOGIN
+function login(){
+let user=document.getElementById("email").value;
+let pass=document.getElementById("pass").value;
+let role=document.getElementById("role").value;
+
+// ADMIN LOCAL (SIN FIREBASE)
+if(role==="admin"){
+if(user==="Leuris" && pass==="uber981016"){
+showAdmin();
+return;
+}else{
+alert("Credenciales de administrador incorrectas");
+return;
+}
+}
+
+// DRIVER LOGIN (FIREBASE)
+auth.signInWithEmailAndPassword(user,pass)
+.then(()=>showDriver())
+.catch(e=>alert(e.message));
+}
+
+function logout(){
+auth.signOut().catch(()=>{});
+location.reload();
+}
+
+// ADMIN
+function showAdmin(){
+document.getElementById("loginBox").style.display="none";
+document.getElementById("adminPanel").style.display="block";
+
+map=L.map('map').setView([32.5,-96.8],12);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+db.ref("drivers").on("value",snap=>{
+let data=snap.val()||{};
+document.getElementById("driversList").innerHTML="";
+
+for(let id in data){
+let d=data[id];
+
+document.getElementById("driversList").innerHTML+=
+`<div class='card'><b>${d.email}</b><br>${d.status}</div>`;
+
+if(d.lat){
+if(!markers[id]){
+markers[id]=L.marker([d.lat,d.lng]).addTo(map);
+}else{
+markers[id].setLatLng([d.lat,d.lng]);
+}
+}
+}
+});
+}
+
+// DRIVER
+function showDriver(){
+document.getElementById("loginBox").style.display="none";
+document.getElementById("driverPanel").style.display="block";
+}
+
+function startTracking(){
+document.getElementById("status").innerText="Estado: Disponible";
+
+watchId=navigator.geolocation.watchPosition(pos=>{
+let lat=pos.coords.latitude;
+let lng=pos.coords.longitude;
+
+let user=auth.currentUser;
+if(!user) return;
+
+db.ref("drivers/"+user.uid).set({
+email:user.email,
+lat:lat,
+lng:lng,
+status:"Disponible"
+});
+});
+}
+
+function stopTracking(){
+navigator.geolocation.clearWatch(watchId);
+let user=auth.currentUser;
+if(user){
+db.ref("drivers/"+user.uid).update({status:"Offline"});
+}
+document.getElementById("status").innerText="Estado: Offline";
+}
+
+auth.onAuthStateChanged(user=>{
+if(user){
+document.getElementById("loginBox").style.display="block";
+}
+});
+</script>
+
+<script>
+document.getElementById("loginBox").style.display="block";
+</script>
+
+</body>
+</html>
