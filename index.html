@@ -3,54 +3,164 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Triciclos L&L</title>
+<title>Triciclos L&L Pro</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
-:root{--r:#E63946;--b:#111;--w:#fff;}
-body{background:var(--b);color:var(--w);}
-header img{width:100%;height:220px;object-fit:cover;display:block;}
-.slogan{background:var(--r);padding:14px;text-align:center;font-weight:bold;}
-.container{max-width:750px;margin:auto;padding:15px;}
-.card{background:#1c1c1c;padding:15px;border-radius:12px;margin:15px 0;}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+
+:root{
+--r:#E63946;
+--black:#111827;
+--bg:#F8FAFC;
+--card:#FFFFFF;
+--text:#1F2937;
+--border:#E5E7EB;
+}
+
+body{
+background:var(--bg);
+color:var(--text);
+}
+
+header img{
+width:100%;
+height:260px;
+object-fit:cover;
+display:block;
+border-bottom-left-radius:24px;
+border-bottom-right-radius:24px;
+}
+
+.slogan{
+background:#fff;
+color:var(--black);
+padding:16px;
+text-align:center;
+font-weight:700;
+border-bottom:1px solid var(--border);
+}
+
+.container{
+max-width:800px;
+margin:auto;
+padding:15px;
+}
+
+.card{
+background:var(--card);
+padding:20px;
+border-radius:18px;
+margin:15px 0;
+border:1px solid var(--border);
+box-shadow:0 4px 20px rgba(0,0,0,.06);
+}
+
+h2{
+margin-bottom:12px;
+font-size:1.2rem;
+font-weight:700;
+}
+
+#map{
+height:300px;
+border-radius:16px;
+overflow:hidden;
+}
+
 input,select,textarea{
-width:100%;padding:12px;margin:8px 0;border-radius:8px;
-border:1px solid #ccc;background:#fff;color:#000;font-size:15px;
+width:100%;
+padding:14px;
+margin:8px 0;
+border-radius:12px;
+border:1px solid #D1D5DB;
+background:#fff;
+font-size:15px;
 }
-input::placeholder,textarea::placeholder{color:#666;}
-button,.btn{
-width:100%;padding:14px;border:none;border-radius:10px;
-background:var(--r);color:#fff;font-weight:bold;cursor:pointer;
+
+input:focus,
+select:focus,
+textarea:focus{
+outline:none;
+border-color:var(--r);
+box-shadow:0 0 0 4px rgba(230,57,70,.12);
 }
+
+button{
+width:100%;
+padding:15px;
+border:none;
+border-radius:14px;
+background:var(--r);
+color:#fff;
+font-weight:700;
+cursor:pointer;
+}
+
 .btn2{
-background:#fff;color:#000;text-decoration:none;display:block;
-text-align:center;margin-top:10px;padding:14px;border-radius:10px;
+display:block;
+text-decoration:none;
+text-align:center;
+padding:14px;
+border-radius:14px;
+background:#fff;
+border:1px solid #D1D5DB;
+color:#111827;
+margin-top:10px;
 }
-#map{height:250px;border-radius:12px;overflow:hidden;}
+
 .profile{
-position:fixed;top:15px;right:15px;background:var(--r);
-width:45px;height:45px;border-radius:50%;
-display:flex;justify-content:center;align-items:center;z-index:10;
+position:fixed;
+top:18px;
+right:18px;
+background:var(--r);
+width:52px;
+height:52px;
+border-radius:50%;
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:1000;
+box-shadow:0 8px 20px rgba(230,57,70,.35);
 }
-.profile a{color:#fff}
+
+.profile a{
+color:#fff;
+font-size:18px;
+}
+
 .modal{
-display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
-align-items:center;justify-content:center;z-index:999;
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.85);
+justify-content:center;
+align-items:center;
+z-index:99999;
+backdrop-filter:blur(4px);
 }
+
 .modalBox{
-background:#222;padding:20px;border-radius:12px;
-width:90%;max-width:350px;text-align:center;
+background:#fff;
+color:#111827;
+padding:25px;
+border-radius:20px;
+width:90%;
+max-width:350px;
+text-align:center;
 }
 </style>
 </head>
 <body>
 
 <div class="profile">
-<a href="#" onclick="openModal()"><i class="fa fa-user"></i></a>
+<a href="javascript:void(0)" onclick="openModal()"><i class="fa fa-user"></i></a>
 </div>
 
 <header>
@@ -75,12 +185,12 @@ width:90%;max-width:350px;text-align:center;
 <input id="destino" placeholder="Destino">
 
 <select id="pas">
-<option value="1">1 pasajero</option>
-<option value="2">2 pasajeros</option>
-<option value="3">3 pasajeros</option>
-<option value="4">4 pasajeros</option>
-<option value="5">5 pasajeros</option>
-<option value="6" selected>6 pasajeros</option>
+<option>1 pasajero</option>
+<option>2 pasajeros</option>
+<option>3 pasajeros</option>
+<option>4 pasajeros</option>
+<option>5 pasajeros</option>
+<option selected>6 pasajeros</option>
 </select>
 
 <select id="pago">
@@ -92,11 +202,11 @@ width:90%;max-width:350px;text-align:center;
 
 <button onclick="enviar()">Reservar por WhatsApp</button>
 
-<a class="btn btn2" href="https://wa.me/5354632153" target="_blank">
+<a class="btn2" href="https://wa.me/5354632153" target="_blank">
 <i class="fa-brands fa-whatsapp"></i> Contactar por WhatsApp
 </a>
-</div>
 
+</div>
 </div>
 
 <div class="modal" id="modal">
@@ -104,21 +214,13 @@ width:90%;max-width:350px;text-align:center;
 <h2>Triciclos L&L</h2>
 <p>Tu destino, nuestro compromiso</p><br>
 <p>✔ Hasta 6 pasajeros</p>
-<p>✔ Servicio rápido y seguro</p>
-<br>
+<p>✔ Servicio rápido y seguro</p><br>
 <button onclick="closeModal()">Cerrar</button>
 </div>
 </div>
 
 <script>
 const modal=document.getElementById("modal");
-
-function openModal(){ modal.style.display="flex"; }
-function closeModal(){ modal.style.display="none"; }
-
-window.onclick=e=>{
-if(e.target===modal) closeModal();
-};
 
 let map=L.map('map').setView([23.1136,-82.3666],13);
 
@@ -131,49 +233,54 @@ if(navigator.geolocation){
 navigator.geolocation.getCurrentPosition(pos=>{
 const lat=pos.coords.latitude;
 const lng=pos.coords.longitude;
-
 map.setView([lat,lng],16);
-
-L.marker([lat,lng])
-.addTo(map)
+L.marker([lat,lng]).addTo(map)
 .bindPopup("Tu ubicación actual")
 .openPopup();
-
-},()=>{
-alert("No fue posible obtener tu ubicación");
 });
+}
+
+function openModal(){
+modal.style.display='flex';
+map.dragging.disable();
+}
+
+function closeModal(){
+modal.style.display='none';
+map.dragging.enable();
+setTimeout(()=>map.invalidateSize(),200);
 }
 
 function enviar(){
 
-const nombre=document.getElementById("nombre");
-const tel=document.getElementById("tel");
-const origen=document.getElementById("origen");
-const destino=document.getElementById("destino");
-const pas=document.getElementById("pas");
-const pago=document.getElementById("pago");
-const obs=document.getElementById("obs");
+const nombre=document.getElementById("nombre").value.trim();
+const tel=document.getElementById("tel").value.trim();
+const origen=document.getElementById("origen").value.trim();
+const destino=document.getElementById("destino").value.trim();
+const pas=document.getElementById("pas").value;
+const pago=document.getElementById("pago").value;
+const obs=document.getElementById("obs").value;
 
-if(!nombre.value.trim() || !tel.value.trim() ||
-!origen.value.trim() || !destino.value.trim()){
+if(!nombre||!tel||!origen||!destino){
 alert("Completa todos los campos obligatorios");
 return;
 }
 
-let mensaje=
-"🚖 NUEVA RESERVA%0A%0A"+
-"👤 Nombre: "+encodeURIComponent(nombre.value)+"%0A"+
-"📞 Teléfono: "+encodeURIComponent(tel.value)+"%0A"+
-"📍 Recogida: "+encodeURIComponent(origen.value)+"%0A"+
-"🏁 Destino: "+encodeURIComponent(destino.value)+"%0A"+
-"👥 Pasajeros: "+encodeURIComponent(pas.value)+"%0A"+
-"💳 Pago: "+encodeURIComponent(pago.value)+"%0A"+
-"📝 Observaciones: "+encodeURIComponent(obs.value);
+const mensaje=encodeURIComponent(
+`🚖 NUEVA RESERVA
 
-if(confirm("¿Confirmar y enviar reserva?")){
+👤 Nombre: ${nombre}
+📞 Teléfono: ${tel}
+📍 Recogida: ${origen}
+🏁 Destino: ${destino}
+👥 Pasajeros: ${pas}
+💳 Pago: ${pago}
+📝 Observaciones: ${obs}`
+);
+
 window.open("https://wa.me/5354632153?text="+mensaje,"_blank");
 }
-}
 </script>
+
 </body>
 </html>
