@@ -41,12 +41,25 @@ box-shadow:0 4px 10px rgba(0,0,0,0.12);
 filter:brightness(0.95);
 }
 
-input,select,textarea{
-width:100%;
-padding:13px;
-margin:7px 0;
-border-radius:12px;
-border:1px solid #D1D5DB;
+.service-card{
+background:#fff;
+padding:18px;
+border-radius:16px;
+border:1px solid #E5E7EB;
+margin:12px 0;
+box-shadow:0 4px 12px rgba(0,0,0,0.06);
+}
+
+.service-title{
+font-size:18px;
+font-weight:800;
+margin-bottom:6px;
+}
+
+.service-text{
+font-size:14px;
+line-height:1.5;
+color:#374151;
 }
 </style>
 </head>
@@ -66,11 +79,35 @@ border:1px solid #D1D5DB;
 <button onclick="openMaps()">🗺 Abrir ubicación en Google Maps</button>
 </div>
 
+<!-- 🔥 SERVICIOS MEJORADOS -->
 <div class="card">
-<h2>Servicios</h2>
-<p><b>🚖 Pasajeros</b><br>Traslados urbanos cómodos y seguros.</p>
-<p><b>📦 Cargas</b><br>Entrega de paquetes y mercancías.</p>
-<p><b>🛠 Remolque</b><br>Solo remolque de vehículos eléctricos. No incluye reparación ni asistencia técnica.</p>
+<h2>Servicios Profesionales</h2>
+
+<div class="service-card">
+<div class="service-title">🚖 Transporte de Pasajeros</div>
+<div class="service-text">
+Servicio seguro, cómodo y eficiente de traslado urbano y suburbano.
+Ideal para viajes personales, laborales o turísticos con atención rápida y confiable.
+</div>
+</div>
+
+<div class="service-card">
+<div class="service-title">📦 Envío y Transporte de Cargas</div>
+<div class="service-text">
+Soluciones de entrega para paquetes y mercancías ligeras dentro de la ciudad.
+Garantizamos puntualidad, cuidado en el manejo y seguridad en cada entrega.
+</div>
+</div>
+
+<div class="service-card">
+<div class="service-title">🛠 Servicio de Remolque Especializado</div>
+<div class="service-text">
+Servicio exclusivo de remolque para vehículos eléctricos.
+<strong>Este servicio no incluye reparación, asistencia técnica ni mantenimiento mecánico.</strong>
+Está diseñado únicamente para traslado seguro del vehículo.
+</div>
+</div>
+
 </div>
 
 <div class="card">
@@ -104,16 +141,6 @@ border:1px solid #D1D5DB;
 
 <script>
 
-const vibrar = () => {
-if(navigator.vibrate) navigator.vibrate(80);
-};
-
-document.addEventListener('click', e=>{
-if(e.target.tagName==='BUTTON' || e.target.tagName==='A'){
-vibrar();
-}
-});
-
 // 📍 GOOGLE MAPS
 function openMaps(){
 if(navigator.geolocation){
@@ -129,7 +156,7 @@ window.open('https://www.google.com/maps','_blank');
 }
 }
 
-// 📩 MENSAJE (VALIDACIÓN MEJORADA)
+// 📩 MENSAJE
 function mensaje(){
 const g=id=>document.getElementById(id).value.trim();
 
