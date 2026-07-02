@@ -5,11 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Triciclos L&L Pro</title>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
 :root{--r:#E63946;--bg:#F3F6FA;--card:#fff;--text:#1F2937;--border:#E5E7EB}
+
 body{background:var(--bg);color:var(--text)}
 
 header img{width:100%;height:240px;object-fit:cover;border-radius:0 0 28px 28px}
@@ -26,7 +25,7 @@ border:1px solid var(--border);
 box-shadow:0 6px 18px rgba(0,0,0,.06)
 }
 
-/* 🔥 BOTONES */
+/* BOTONES */
 button,.btn2{
 display:block;
 width:100%;
@@ -37,7 +36,8 @@ cursor:pointer;
 text-align:center;
 margin-top:10px;
 transition:.2s;
-box-shadow:0 6px 14px rgba(0,0,0,.15)
+box-shadow:0 6px 14px rgba(0,0,0,.15);
+text-decoration:none;
 }
 
 button{background:var(--r);color:#fff;border:none}
@@ -48,41 +48,17 @@ transform:scale(.96);
 filter:brightness(.95)
 }
 
-/* 🧾 FORMULARIO MEJORADO */
-.form-grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px
-}
-
-.form-grid input,
-.form-grid select,
-.form-grid textarea{
+/* FORM */
+input,select,textarea{
 width:100%;
 padding:13px;
+margin:7px 0;
 border-radius:12px;
 border:1px solid #D1D5DB;
 }
 
-.form-full{
-grid-column:1 / -1;
-}
-
-@media(max-width:600px){
-.form-grid{grid-template-columns:1fr}
-}
-
-/* 🧠 SERVICIOS OCULTOS */
-#servicios{
-display:none;
-animation:fade .3s ease-in-out;
-}
-
-@keyframes fade{
-from{opacity:0;transform:translateY(10px)}
-to{opacity:1;transform:translateY(0)}
-}
-
+/* SERVICIOS */
+#servicios{display:none}
 .service-card{
 background:#fff;
 padding:16px;
@@ -91,9 +67,8 @@ border:1px solid #E5E7EB;
 margin:10px 0;
 box-shadow:0 4px 12px rgba(0,0,0,.06)
 }
-
-.service-title{font-weight:800;margin-bottom:5px}
-.service-text{font-size:14px;line-height:1.5;color:#374151}
+.service-title{font-weight:800}
+.service-text{font-size:14px;color:#374151;margin-top:5px}
 </style>
 </head>
 
@@ -107,49 +82,40 @@ box-shadow:0 4px 12px rgba(0,0,0,.06)
 
 <div class="container">
 
+<!-- UBICACIÓN -->
 <div class="card">
 <h2>Ubicación</h2>
-<button>🗺 Abrir ubicación en Google Maps</button>
+<button onclick="openMaps()">🗺 Abrir Google Maps</button>
 </div>
 
-<!-- 🧠 BOTÓN SERVICIOS -->
+<!-- SERVICIOS -->
 <div class="card">
 <h2>Información</h2>
 <button onclick="toggleServicios()">📋 Nuestros Servicios</button>
-</div>
 
-<!-- 🔥 SERVICIOS (OCULTOS) -->
-<div class="card" id="servicios">
+<div id="servicios">
 
 <div class="service-card">
 <div class="service-title">🚖 Transporte de Pasajeros</div>
-<div class="service-text">
-Traslados urbanos y suburbanos seguros, cómodos y rápidos.
-</div>
+<div class="service-text">Traslados urbanos seguros, rápidos y cómodos.</div>
 </div>
 
 <div class="service-card">
 <div class="service-title">📦 Envío de Cargas</div>
-<div class="service-text">
-Entrega de paquetes ligeros con puntualidad y cuidado garantizado.
-</div>
+<div class="service-text">Entrega de paquetes con puntualidad y cuidado.</div>
 </div>
 
 <div class="service-card">
 <div class="service-title">🛠 Remolque de Vehículos Eléctricos</div>
-<div class="service-text">
-Servicio exclusivo de remolque para vehículos eléctricos.
-<strong>No incluye reparación ni asistencia técnica.</strong>
-</div>
+<div class="service-text"><b>Solo remolque.</b> No incluye reparación ni asistencia técnica.</div>
 </div>
 
 </div>
+</div>
 
-<!-- 🧾 RESERVA -->
+<!-- RESERVA -->
 <div class="card">
 <h2>Reserva</h2>
-
-<div class="form-grid">
 
 <input id="nombre" placeholder="Nombre">
 <input id="tel" placeholder="Teléfono">
@@ -158,22 +124,25 @@ Servicio exclusivo de remolque para vehículos eléctricos.
 
 <select id="pas">
 <option value="">Pasajeros</option>
-<option>1</option><option>2</option><option>3</option><option>4</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
 </select>
 
 <select id="pago">
-<option value="">Pago</option>
+<option value="">Método de pago</option>
 <option>Efectivo</option>
 <option>Transferencia</option>
 </select>
 
-<textarea id="obs" class="form-full" placeholder="Observaciones"></textarea>
+<textarea id="obs" placeholder="Observaciones (opcional)"></textarea>
 
-<button class="form-full">🟢 WhatsApp</button>
-<a class="btn2 form-full">📩 SMS</a>
-<a class="btn2 form-full">📞 Llamar</a>
-
-</div>
+<button onclick="enviarWhatsApp()">🟢 WhatsApp</button>
+<a class="btn2" onclick="enviarSMS()">📩 SMS</a>
+<a class="btn2" href="tel:+5354632153">📞 Llamar</a>
 
 </div>
 
@@ -181,18 +150,62 @@ Servicio exclusivo de remolque para vehículos eléctricos.
 
 <script>
 
-// 🧠 MOSTRAR / OCULTAR SERVICIOS
-function toggleServicios(){
-const s=document.getElementById('servicios');
-s.style.display = (s.style.display==='block') ? 'none' : 'block';
+// 📍 MAPA
+function openMaps(){
+window.open("https://www.google.com/maps","_blank");
 }
 
-// 📍 MAPA SIMPLE
-function openMaps(){
-window.open('https://www.google.com/maps','_blank');
+// 📋 SERVICIOS
+function toggleServicios(){
+const s=document.getElementById("servicios");
+s.style.display = (s.style.display==="block") ? "none" : "block";
+}
+
+// 📩 MENSAJE
+function mensaje(){
+const g=id=>document.getElementById(id).value.trim();
+
+const nombre=g("nombre");
+const tel=g("tel");
+const origen=g("origen");
+const destino=g("destino");
+const pas=g("pas");
+const pago=g("pago");
+const obs=g("obs");
+
+if(!nombre||!tel||!origen||!destino||!pas||!pago){
+alert("⚠️ Completa todos los campos obligatorios");
+return null;
+}
+
+return `🚖 NUEVA RESERVA
+
+👤 ${nombre}
+📞 ${tel}
+📍 ${origen}
+🏁 ${destino}
+👥 ${pas}
+💳 ${pago}
+📝 ${obs || "Ninguna"}`;
+}
+
+// 🟢 WHATSAPP
+function enviarWhatsApp(){
+const m=mensaje();
+if(m){
+window.open("https://wa.me/5354632153?text="+encodeURIComponent(m));
+}
+}
+
+// 📩 SMS
+function enviarSMS(){
+const m=mensaje();
+if(m){
+location.href="sms:+5354632153?body="+encodeURIComponent(m);
+}
 }
 
 </script>
 
 </body>
-</html> 
+</html>
