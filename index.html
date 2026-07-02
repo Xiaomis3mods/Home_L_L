@@ -35,7 +35,7 @@ box-shadow:0 6px 18px rgba(0,0,0,.06)
 h2{margin-bottom:10px}
 
 .map-tab,button{
-width:100%;padding:14px;border:none;border-radius:24px;
+width:100%;padding:14px;border:none;border-radius:14px;
 background:var(--r);color:#fff;font-weight:700;cursor:pointer;
 margin-top:8px;
 }
@@ -62,7 +62,7 @@ margin-bottom:6px;
 
 .btn2{
 display:block;text-align:center;padding:14px;
-border-radius:24px;background:#fff;
+border-radius:14px;background:#fff;
 border:1px solid #D1D5DB;color:#111827;
 margin-top:10px;text-decoration:none
 }
@@ -81,7 +81,7 @@ margin-top:10px;text-decoration:none
 
 <div class="card">
 <h2>Ubicación</h2>
-<button id="btnMapa" class="map-tab" onclick="toggleMap()">🗺 Abrir Mapa</button>
+<button id="btnMapa" class="map-tab" onclick="openMapNewTab()">🗺 Abrir Mapa</button>
 <div id="mapContainer">
   <div id="map"></div>
 </div>
@@ -94,7 +94,7 @@ margin-top:10px;text-decoration:none
 <h2>Servicios disponibles</h2>
 
 <p style="margin-bottom:12px;">
-En <b>Triciclos L&L</b> ofrecemos transporte rápido, seguro y confiable, con atención personalizada, puntualidad y cobertura para traslados de pasajeros, cargas y remolque de vehículos eléctricos.
+En <b>Triciclos L&L</b> ofrecemos transporte rápido, seguro y confiable.
 </p>
 
 <div class="service-item">
@@ -142,9 +142,6 @@ En <b>Triciclos L&L</b> ofrecemos transporte rápido, seguro y confiable, con at
 <textarea id="obs" placeholder="Observaciones"></textarea>
 
 <button onclick="enviar()">Reservar por WhatsApp</button>
-
-<a class="btn2" href="sms:+5354632153">📩 Reservar por SMS</a>
-<a class="btn2" href="tel:+5354632153">📞 Llamar ahora</a>
 
 <a class="btn2" href="https://raw.githubusercontent.com/Xiaomis3mods/triciclos/main/Triciclos%20L%26L.apk">
 📲 Descargar App
@@ -223,5 +220,68 @@ window.open("https://wa.me/5354632153?text=" + mensaje);
 
 </script>
 
+
+<script>
+function openMapNewTab(){
+  const w = window.open('', '_blank');
+  const html = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa - Triciclos L&L</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+html,body{margin:0;padding:0;height:100%;font-family:Arial;}
+#map{height:100%;width:100%;}
+.pill{
+position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+background:#111;color:#fff;padding:14px 22px;border-radius:999px;
+z-index:9999;border:none;font-size:16px;
+}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<button class="pill" onclick="goBack()">↩ Regresar</button>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+function goBack(){
+  try{ window.close(); }catch(e){}
+  if(window.opener){ window.opener.focus(); }
+}
+
+let map = L.map('map').setView([51.8, 3.9], 13);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+attribution:'© OpenStreetMap'
+}).addTo(map);
+
+function setUser(lat,lng){
+  L.marker([lat,lng]).addTo(map).bindPopup('Tu ubicación').openPopup();
+  map.setView([lat,lng],15);
+}
+
+if(navigator.geolocation){
+  navigator.geolocation.getCurrentPosition(
+    (pos)=>{
+      setUser(pos.coords.latitude,pos.coords.longitude);
+    },
+    ()=>{
+      // fallback
+    }
+  );
+}
+</script>
 </body>
-</html> 
+</html>
+`;
+
+w.document.write(html);
+w.document.close();
+}
+</script>
+
+</body>
+</html>
