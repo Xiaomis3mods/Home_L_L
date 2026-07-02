@@ -6,9 +6,6 @@
 <title>Triciclos L&L Pro</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
 :root{--r:#E63946;--bg:#F3F6FA;--card:#fff;--text:#1F2937;--border:#E5E7EB}
@@ -81,7 +78,7 @@ margin-top:10px;text-decoration:none
 
 <div class="card">
 <h2>Ubicación</h2>
-<button id="btnMapa" class="map-tab" onclick="openMapNewTab()">🗺 Abrir Mapa</button>
+<button id="btnMapa" class="map-tab" onclick="toggleMap()">🗺 Abrir Mapa</button>
 <div id="mapContainer">
   <div id="map"></div>
 </div>
@@ -166,14 +163,20 @@ maxZoom:19
 }).addTo(map);
 
 function toggleMap(){
-if(mapContainer.style.display === "block"){
-mapContainer.style.display = "none";
-btnMapa.innerHTML = "🗺 Abrir Mapa";
-} else {
-mapContainer.style.display = "block";
-btnMapa.innerHTML = "✖️ Cerrar Mapa";
-setTimeout(()=>map.invalidateSize(),200);
-}
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        window.open(`https://www.google.com/maps?q=${lat},${lng}`, "_blank");
+      },
+      () => {
+        window.open("https://www.google.com/maps", "_blank");
+      }
+    );
+  } else {
+    window.open("https://www.google.com/maps", "_blank");
+  }
 }
 
 // SERVICIOS
@@ -220,68 +223,5 @@ window.open("https://wa.me/5354632153?text=" + mensaje);
 
 </script>
 
-
-<script>
-function openMapNewTab(){
-  const w = window.open('', '_blank');
-  const html = `
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mapa - Triciclos L&L</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<style>
-html,body{margin:0;padding:0;height:100%;font-family:Arial;}
-#map{height:100%;width:100%;}
-.pill{
-position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
-background:#111;color:#fff;padding:14px 22px;border-radius:999px;
-z-index:9999;border:none;font-size:16px;
-}
-</style>
-</head>
-<body>
-<div id="map"></div>
-<button class="pill" onclick="goBack()">↩ Regresar</button>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-function goBack(){
-  try{ window.close(); }catch(e){}
-  if(window.opener){ window.opener.focus(); }
-}
-
-let map = L.map('map').setView([51.8, 3.9], 13);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-attribution:'© OpenStreetMap'
-}).addTo(map);
-
-function setUser(lat,lng){
-  L.marker([lat,lng]).addTo(map).bindPopup('Tu ubicación').openPopup();
-  map.setView([lat,lng],15);
-}
-
-if(navigator.geolocation){
-  navigator.geolocation.getCurrentPosition(
-    (pos)=>{
-      setUser(pos.coords.latitude,pos.coords.longitude);
-    },
-    ()=>{
-      // fallback
-    }
-  );
-}
-</script>
 </body>
 </html>
-`;
-
-w.document.write(html);
-w.document.close();
-}
-</script>
-
-</body>
-</html> 
