@@ -44,6 +44,7 @@ background:#fff;
 padding:14px;
 text-align:center;
 font-weight:700;
+border-bottom:1px solid var(--border);
 }
 
 .container{
@@ -59,6 +60,50 @@ border-radius:18px;
 margin:14px 0;
 border:1px solid var(--border);
 box-shadow:0 6px 18px rgba(0,0,0,.06);
+}
+
+.card-intro{
+font-size:14px;
+color:#4B5563;
+line-height:1.5;
+margin-bottom:12px;
+text-align:center;
+}
+
+/* MENÚ DESPLEGABLE DE CABECERA */
+.menu-container {
+background: #fff;
+border-radius: 14px;
+border: 1px solid var(--border);
+margin-bottom: 14px;
+overflow: hidden;
+box-shadow: 0 4px 12px rgba(0,0,0,.04);
+}
+
+.menu-trigger {
+width: 100%;
+background: #1F2937;
+color: #fff;
+padding: 14px;
+font-weight: 700;
+text-align: center;
+cursor: pointer;
+border: none;
+display: flex;
+justify-content: center;
+align-items: center;
+gap: 8px;
+box-shadow: none;
+margin-top: 0;
+border-radius: 0;
+}
+
+.menu-content {
+display: none;
+padding: 12px;
+background: #F9FAFB;
+animation: fade .3s ease;
+border-top: 1px solid var(--border);
 }
 
 /* BOTONES */
@@ -81,30 +126,20 @@ button{background:var(--r);color:#fff}
 .btn{background:#fff;color:#111827;border:1px solid #D1D5DB}
 .btn-call{background:var(--g);color:#fff;border:none}
 
-button:active,.btn:active{
+.menu-content button {
+box-shadow: 0 4px 10px rgba(0,0,0,.08);
+}
+
+button:active,.btn:active {
 transform:scale(.96);
 filter:brightness(.95);
 }
 
-/* FORM */
-input,select,textarea{
-width:100%;
-padding:13px;
-margin:7px 0;
-border-radius:12px;
-border:1px solid #D1D5DB;
-}
-
-label{
-display:block;
-margin-top:10px;
-font-weight:700;
-}
-
-/* SERVICIOS */
-#servicios{
+/* SECCIONES INTERNAS EN EL MENÚ */
+.desplegable-info {
 display:none;
 animation:fade .3s ease;
+margin-top: 12px;
 }
 
 @keyframes fade{
@@ -131,6 +166,35 @@ font-size:14px;
 line-height:1.5;
 color:#374151;
 }
+
+.step-number{
+background:var(--r);
+color:#fff;
+display:inline-block;
+width:24px;
+height:24px;
+border-radius:50%;
+text-align:center;
+line-height:24px;
+font-size:12px;
+font-weight:bold;
+margin-right:6px;
+}
+
+/* FORM */
+input,select,textarea{
+width:100%;
+padding:13px;
+margin:7px 0;
+border-radius:12px;
+border:1px solid #D1D5DB;
+}
+
+label{
+display:block;
+margin-top:10px;
+font-weight:700;
+}
 </style>
 </head>
 
@@ -144,44 +208,67 @@ color:#374151;
 
 <div class="container">
 
-<!-- UBICACIÓN -->
-<div class="card">
-<h2>Ubicación</h2>
-<button onclick="openMaps()">Abrir ubicación en Google Maps</button>
-</div>
+<div class="menu-container">
+<button class="menu-trigger" onclick="toggleMenu()">
+🗺️ Menú de Información e Información Adicional ↓
+</button>
+<div id="menuContent" class="menu-content">
+<p class="card-intro">En Triciclos L&L contamos con un equipo de choferes profesionales altamente experimentados y comprometidos con brindarle una conducción segura y eficiente.</p>
 
-<!-- SERVICIOS -->
-<div class="card">
-<h2>Información</h2>
-<button onclick="toggleServicios()">Nuestros Servicios</button>
+<button onclick="openMaps()" style="background:#34A853;">📍 Abrir en Google Maps</button>
 
-<div id="servicios">
+<button onclick="toggleInfoInterna('servicios')">🚖 Nuestros Servicios</button>
 
+<button onclick="toggleInfoInterna('ayuda')" style="background:#4B5563;">❓ ¿Cómo usar la página?</button>
+
+<div id="servicios" class="desplegable-info">
 <div class="service-card">
 <div class="service-title">🚖 Traslado de Pasajeros Urbano</div>
 <div class="service-text">
-Ofrecemos un servicio premium de movilidad urbana en modernas unidades eléctricas, diseñado para quienes buscan optimizar su tiempo con total comodidad. Nos especializamos <strong>estrictamente en recorridos dentro de la ciudad</strong>, garantizando traslados rápidos, seguros y puntuales hacia sus centros laborales, zonas comerciales, citas médicas o gestiones personales cotidianas. Disfrute de un viaje silencioso, eco-amigable y con un estándar superior de confort en cada cuadra.
+Ofrecemos un servicio premium de movilidad urbana en modernas unidades eléctricas, diseñado para quienes buscan optimizar su tiempo con total comodidad. Nos especializamos <strong>estrictamente en recorridos dentro de la ciudad</strong>, garantizando traslados rápidos, seguros y puntuales hacia sus destinos cotidianos. Disfrute de un viaje silencioso, eco-amigable y con choferes altamente experimentados.
 </div>
 </div>
 
 <div class="service-card">
-<div class="service-title">📦 Traslado de Cargas y Mercancías</div>
+<div class="service-title">📦 Traslado de Cargas, Compras y Mudanzas</div>
 <div class="service-text">
-La solución logística ideal para sus envíos comerciales o particulares. Nos encargamos del transporte de paquetes, encomiendas, compras mayoristas y mercancías de volumen ligero o mediano. Nos distinguimos por un manejo riguroso de su propiedad, asegurando la máxima protección de la carga, un estricto cumplimiento de los tiempos de entrega pactados y un reporte de confirmación inmediato al momento de la recepción.
+La solución logística integral para el transporte físico de sus pertenencias. Nos especializamos en la movilización segura de sus compras de volumen, abastecimiento de mercancías para negocios y pequeñas o medianas mudanzas residenciales. Nuestro enfoque está centrado en la estiba responsable y el cuidado estricto de sus objetos. <em>Nota: Este servicio está diseñado para carga y mudanzas, por lo que no operamos como agencia de mensajería ligera.</em>
 </div>
 </div>
 
 <div class="service-card">
 <div class="service-title">🛠 Asistencia de Remolque Eléctrico</div>
 <div class="service-text">
-Un respaldo confiable en la vía cuando más lo necesita. Brindamos un servicio especializado de enganche y remolque para mototaxis u otros vehículos eléctricos pequeños que hayan quedado inoperativos por fallas mecánicas o descarga de batería. Nos enfocamos exclusivamente en la extracción segura de la unidad y su traslado inmediato hacia su taller de confianza o domicilio. <em>Nota: Este servicio comprende únicamente el transporte del vehículo; no incluye herramientas, diagnósticos técnicos ni reparaciones en el sitio.</em>
+Un respaldo confiable en la vía cuando más lo necesita. Brindamos un servicio especializado de enganche y remolque para mototaxis u otros vehículos eléctricos pequeños que hayan quedado inoperativos por fallas mecánicas o descarga de batería. <em>Nota: Este servicio comprende únicamente el transporte seguro del vehículo; no incluye herramientas ni reparaciones en el sitio.</em>
 </div>
-</div>
-
 </div>
 </div>
 
-<!-- RESERVA -->
+<div id="ayuda" class="desplegable-info">
+<div class="service-card">
+<div class="service-title"><span class="step-number">1</span> Complete el formulario</div>
+<div class="service-text">
+Vaya al bloque de "Reserva" que ve en la pantalla principal y rellene sus datos, lugar de recogida, destino y cantidad de pasajeros.
+</div>
+</div>
+
+<div class="service-card">
+<div class="service-title"><span class="step-number">2</span> Elija su método de envío</div>
+<div class="service-text">
+Presione el botón rojo de <strong>WhatsApp</strong> o el botón blanco de <strong>SMS</strong>. El sistema recopilará automáticamente toda su información.
+</div>
+</div>
+
+<div class="service-card">
+<div class="service-title"><span class="step-number">3</span> Envíe el mensaje</div>
+<div class="service-text">
+La web abrirá su aplicación con el texto ya redactado. Solo presione <strong>enviar</strong> en su teléfono y nuestro equipo le confirmará la solicitud de inmediato.
+</div>
+</div>
+</div>
+</div>
+</div>
+
 <div class="card">
 <h2>Reserva</h2>
 
@@ -218,7 +305,7 @@ Un respaldo confiable en la vía cuando más lo necesita. Brindamos un servicio 
 
 <script>
 
-/* 📳 vibración */
+/* 📳 vibración táctil móvil */
 function vibrar(){
 if(navigator.vibrate){
 navigator.vibrate(80);
@@ -226,12 +313,12 @@ navigator.vibrate(80);
 }
 
 document.addEventListener("click",(e)=>{
-if(e.target.tagName==="BUTTON"||e.target.classList.contains("btn")){
+if(e.target.tagName Fijación === "BUTTON" || e.target.classList.contains("btn") || e.target.classList.contains("menu-trigger")){
 vibrar();
 }
 });
 
-/* MAPA */
+/* MAPA GOOGLE */
 function openMaps(){
 if(navigator.geolocation){
 navigator.geolocation.getCurrentPosition(pos=>{
@@ -244,15 +331,32 @@ window.open("http://maps.google.com/","_blank");
 }
 }
 
-/* SERVICIOS */
-function toggleServicios(){
-const s=document.getElementById("servicios");
-s.style.display = s.style.display==="block" ? "none" : "block";
+/* CONTROL DEL MENÚ DE CABECERA */
+function toggleMenu() {
+const menu = document.getElementById("menuContent");
+if (menu.style.display === "block") {
+menu.style.display = "none";
+} else {
+menu.style.display = "block";
+}
 }
 
-/* MENSAJE FORMATO NUEVO */
-function mensaje(){
+/* CONTROL DE LOS SUBPANELES INTERNOS DEL MENÚ */
+function toggleInfoInterna(id) {
+const target = document.getElementById(id);
+const esVisible = target.style.display === "block";
 
+// Oculta los subpaneles para evitar solapamientos
+document.querySelectorAll('.desplegable-info').forEach(el => el.style.display = 'none');
+
+// Si no era visible antes, lo despliega
+if (!esVisible) {
+target.style.display = "block";
+}
+}
+
+/* MENSAJE AUTOMÁTICO DE RESERVA */
+function mensaje(){
 const g=id=>document.getElementById(id).value.trim();
 
 const nombre=g("nombre");
@@ -279,7 +383,7 @@ return `🚖 NUEVA RESERVA
 📝 Observaciones: ${obs||"Ninguna"}`;
 }
 
-/* WHATSAPP */
+/* COMPARTIR POR WHATSAPP */
 function enviarWhatsApp(){
 const m=mensaje();
 if(m){
@@ -287,7 +391,7 @@ window.open("https://wa.me/5354632153?text="+encodeURIComponent(m));
 }
 }
 
-/* SMS (Compatible Android/iOS) */
+/* COMPARTIR POR SMS */
 function enviarSMS(){
 const m=mensaje();
 if(m){
