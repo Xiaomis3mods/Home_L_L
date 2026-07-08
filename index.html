@@ -1,408 +1,282 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Triciclos L&L Pro</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control - Triciclos L&L</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
 
-<style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial,sans-serif;
-}
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
 
-/* 🚫 QUITAR AZUL AL TOCAR */
-*{
--webkit-tap-highlight-color: transparent;
-}
+        :root {
+            --primary: #E63946;
+            --bg: #F3F6FA;
+            --card: #fff;
+            --text: #1F2937;
+            --border: #E5E7EB;
+        }
 
-:root{
---r:#E63946;
---g:#25D366; /* Verde para llamadas/soporte */
---bg:#F3F6FA;
---card:#fff;
---text:#1F2937;
---border:#E5E7EB;
-}
+        body {
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
 
-body{
-background:var(--bg);
-color:var(--text);
-}
+        header {
+            background: #111827;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
 
-header img{
-width:100%;
-height:240px;
-object-fit:cover;
-border-radius:0 0 28px 28px;
-}
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
 
-.slogan{
-background:#fff;
-padding:14px;
-text-align:center;
-font-weight:700;
-border-bottom:1px solid var(--border);
-}
+        .sidebar {
+            width: 350px;
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
 
-.container{
-max-width:850px;
-margin:auto;
-padding:14px;
-}
+        .map-area {
+            flex: 1;
+            position: relative;
+        }
 
-.card{
-background:#fff;
-padding:18px;
-border-radius:18px;
-margin:14px 0;
-border:1px solid var(--border);
-box-shadow:0 6px 18px rgba(0,0,0,.06);
-}
+        #map {
+            width: 100%;
+            height: 100%;
+        }
 
-.card-intro{
-font-size:14px;
-color:#4B5563;
-line-height:1.5;
-margin-bottom:12px;
-text-align:center;
-}
+        textarea {
+            width: 100%;
+            height: 140px;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #D1D5DB;
+            font-size: 14px;
+            resize: none;
+        }
 
-/* MENÚ DESPLEGABLE DE CABECERA */
-.menu-container {
-background: transparent;
-margin-bottom: 14px;
-overflow: hidden;
-}
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 15px;
+            transition: background 0.2s;
+        }
 
-.menu-trigger {
-width: 100%;
-background: var(--r);
-color: #fff;
-padding: 16px;
-font-weight: 700;
-text-align: center;
-cursor: pointer;
-border: none;
-display: flex;
-justify-content: center;
-align-items: center;
-gap: 8px;
-margin-top: 0;
-border-radius: 999px; /* Forma de píldora */
-box-shadow: 0 6px 14px rgba(0,0,0,.15);
-transition: .2s;
-}
+        button:hover {
+            background: #cc2b37;
+        }
 
-.menu-content {
-display: none;
-padding: 16px;
-background: #fff;
-border-radius: 18px;
-margin-top: 12px;
-animation: fade .3s ease;
-border: 1px solid var(--border);
-box-shadow: 0 6px 18px rgba(0,0,0,.06);
-}
+        .data-box {
+            background: #F9FAFB;
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
 
-/* BOTONES */
-button,.btn{
-display:block;
-width:100%;
-padding:16px;
-border-radius:999px;
-font-weight:700;
-cursor:pointer;
-text-align:center;
-margin-top:10px;
-transition:.2s;
-box-shadow:0 6px 14px rgba(0,0,0,.15);
-text-decoration:none;
-border:none;
-}
+        .data-box strong {
+            color: #111827;
+        }
 
-button{background:var(--r);color:#fff}
-.btn{background:#fff;color:#111827;border:1px solid #D1D5DB}
-.btn-call{background:var(--g);color:#fff;border:none}
+        .status {
+            font-weight: bold;
+            margin-top: 5px;
+            font-size: 14px;
+        }
 
-.menu-content button {
-box-shadow: 0 4px 10px rgba(0,0,0,.08);
-}
+        /* Oculta la caja de texto con itinerarios de Leaflet Routing Machine */
+        .leaflet-routing-container {
+            display: none !important;
+        }
 
-button:active,.btn:active, .menu-trigger:active {
-transform:scale(.96);
-filter:brightness(.95);
-}
-
-/* SECCIONES INTERNAS EN EL MENÚ */
-.desplegable-info {
-display:none;
-animation:fade .3s ease;
-margin-top: 12px;
-}
-
-@keyframes fade{
-from{opacity:0;transform:translateY(10px)}
-to{opacity:1;transform:translateY(0)}
-}
-
-.service-card{
-background:#fff;
-padding:16px;
-border-radius:16px;
-border:1px solid #E5E7EB;
-margin:10px 0;
-box-shadow:0 4px 12px rgba(0,0,0,.06);
-}
-
-.service-title{
-font-weight:800;
-margin-bottom:6px;
-}
-
-.service-text{
-font-size:14px;
-line-height:1.5;
-color:#374151;
-}
-
-.step-number{
-background:var(--r);
-color:#fff;
-display:inline-block;
-width:24px;
-height:24px;
-border-radius:50%;
-text-align:center;
-line-height:24px;
-font-size:12px;
-font-weight:bold;
-margin-right:6px;
-}
-
-/* FORM */
-input,select,textarea{
-width:100%;
-padding:13px;
-margin:7px 0;
-border-radius:12px;
-border:1px solid #D1D5DB;
-}
-
-label{
-display:block;
-margin-top:10px;
-font-weight:700;
-}
-</style>
+        @media (max-width: 768px) {
+            .main-container { flex-direction: column; }
+            .sidebar { width: 100%; height: 45%; }
+            .map-area { height: 55%; }
+        }
+    </style>
 </head>
-
 <body>
 
-<header>
-<img src="https://raw.githubusercontent.com/Xiaomis3mods/triciclos/97c42016ba31bcfc5f6aa4216a2270646f110d68/6%20sin%20t%C3%ADtulo_20260702094854.jpg" loading="lazy" alt="Banner Triciclos L&L">
-</header>
+    <header>🚖 Panel de Enrutamiento Automático - Triciclos L&L</header>
 
-<div class="slogan">Tu destino, nuestro compromiso</div>
+    <div class="main-container">
+        <aside class="sidebar">
+            <h3>Pegar Mensaje de Reserva</h3>
+            <textarea id="textoReserva" placeholder="Pega aquí el texto completo enviado por el cliente..."></textarea>
+            
+            <button onclick="procesarMensaje()">Detectar y Trazar Ruta</button>
 
-<div class="container">
+            <hr style="border: 0; border-top: 1px dashed var(--border);">
 
-<div class="menu-container">
-<button class="menu-trigger" onclick="toggleMenu()">
-ℹ️ Más Información
-</button>
-<div id="menuContent" class="menu-content">
-<p class="card-intro">En Triciclos L&L contamos con un equipo de choferes profesionales altamente experimentados y comprometidos con brindarle una conducción segura y eficiente.</p>
+            <h3>Datos Detectados</h3>
+            <div class="data-box">
+                <p>👤 <strong>Cliente:</strong> <span id="det-nombre">-</span></p>
+                <p>📞 <strong>Teléfono:</strong> <span id="det-tel">-</span></p>
+                <p>📍 <strong>Recogida:</strong> <span id="det-origen">-</span></p>
+                <p>🏁 <strong>Destino:</strong> <span id="det-destino">-</span></p>
+            </div>
 
-<button onclick="openMaps()" style="background:#34A853;">📍 Abrir en Google Maps</button>
+            <div id="statusLog" class="status" style="color: #6B7280;">Esperando mensaje...</div>
+        </aside>
 
-<button onclick="toggleInfoInterna('servicios')">🚖 Nuestros Servicios</button>
+        <main class="map-area">
+            <div id="map"></div>
+        </main>
+    </div>
 
-<button onclick="toggleInfoInterna('ayuda')" style="background:#4B5563;">❓ ¿Cómo usar la página?</button>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
-<div id="servicios" class="desplegable-info">
-<div class="service-card">
-<div class="service-title">🚖 Traslado de Pasajeros Urbano</div>
-<div class="service-text">
-Ofrecemos un servicio premium de movilidad urbana en modernas unidades eléctricas, diseñado para quienes buscan optimizar su tiempo con total comodidad. Nos especializamos <strong>estrictamente en recorridos dentro de la ciudad</strong>, garantizando traslados rápidos, seguros y puntuales hacia sus destinos cotidianos. Disfrute de un viaje silencioso, eco-amigable y con choferes altamente experimentados.
-</div>
-</div>
+    <script>
+        let map;
+        let routingControl = null;
 
-<div class="service-card">
-<div class="service-title">📦 Traslado de Cargas, Compras y Mudanzas</div>
-<div class="service-text">
-La solución logística integral para el transporte físico de sus pertenencias. Nos especializamos en la movilización segura de sus compras de volumen, abastecimiento de mercancías para negocios y pequeñas o medianas mudanzas residenciales. Nuestro enfoque está centrado en la estiba responsable y el cuidado estricto de sus objetos. <em>Nota: Este servicio está diseñado para carga y mudanzas, por lo que no operamos como agencia de mensajería ligera.</em>
-</div>
-</div>
+        const DEFAULT_LAT = 23.1136;
+        const DEFAULT_LNG = -82.3666;
 
-<div class="service-card">
-<div class="service-title">🛠 Asistencia de Remolque Eléctrico</div>
-<div class="service-text">
-Un respaldo confiable en la vía cuando más lo necesita. Brindamos un servicio especializado de enganche y remolque para mototaxis u otros vehículos eléctricos pequeños que hayan quedado inoperativos por fallas mecánicas o descarga de batería. <em>Nota: Este servicio comprende únicamente el transporte seguro del vehículo; no incluye herramientas ni reparaciones en el sitio.</em>
-</div>
-</div>
-</div>
+        function initMap() {
+            map = L.map('map', { zoomControl: true }).setView([DEFAULT_LAT, DEFAULT_LNG], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+        }
 
-<div id="ayuda" class="desplegable-info">
-<div class="service-card">
-<div class="service-title"><span class="step-number">1</span> Complete el formulario</div>
-<div class="service-text">
-Vaya al bloque de "Reserva" que ve en la pantalla principal y rellene sus datos, lugar de recogida, destino y cantidad de pasajeros.
-</div>
-</div>
+        async function procesarMensaje() {
+            const texto = document.getElementById('textoReserva').value;
+            const log = document.getElementById('statusLog');
+            
+            if (!texto.trim()) {
+                log.style.color = "red";
+                log.innerText = "❌ El cuadro de texto está vacío.";
+                return;
+            }
 
-<div class="service-card">
-<div class="service-title"><span class="step-number">2</span> Elija su método de envío</div>
-<div class="service-text">
-Presione el botón rojo de <strong>WhatsApp</strong> o el botón blanco de <strong>SMS</strong>. El sistema recopilará automáticamente toda su información.
-</div>
-</div>
+            log.style.color = "#111827";
+            log.innerText = "🔍 Analizando texto...";
 
-<div class="service-card">
-<div class="service-title"><span class="step-number">3</span> Envíe el mensaje</div>
-<div class="service-text">
-La web abrirá su aplicación con el texto ya redactado. Solo presione <strong>enviar</strong> en su teléfono y nuestro equipo le confirmará la solicitud de inmediato.
-</div>
-</div>
-</div>
-</div>
-</div>
+            const regexNombre = /(?:👤\s*Nombre:\s*|Nombre:\s*)(.+)/i;
+            const regexTel = /(?:📞\s*Teléfono:\s*|Teléfono:\s*)(.+)/i;
+            const regexOrigen = /(?:📍\s*Recogida:\s*|Recogida:\s*)(.+)/i;
+            const regexDestino = /(?:🏁\s*Destino:\s*|Destino:\s*)(.+)/i;
 
-<div class="card">
-<h2>Reserva</h2>
+            const nombre = texto.match(regexNombre)?.[1]?.trim() || "No detectado";
+            const tel = texto.match(regexTel)?.[1]?.trim() || "No detectado";
+            const origen = texto.match(regexOrigen)?.[1]?.trim() || "";
+            const destino = texto.match(regexDestino)?.[1]?.trim() || "";
 
-<input id="nombre" type="text" autocomplete="name" placeholder="Nombre">
-<input id="tel" type="tel" autocomplete="tel" placeholder="Teléfono">
-<input id="origen" placeholder="Recogida">
-<input id="destino" placeholder="Destino">
+            document.getElementById('det-nombre').innerText = nombre;
+            document.getElementById('det-tel').innerText = tel;
+            document.getElementById('det-origen').innerText = origen || "No detectado";
+            document.getElementById('det-destino').innerText = destino || "No detectado";
 
-<label>Cantidad de pasajeros</label>
-<select id="pas">
-<option>1</option>
-<option>2</option>
-<option>3</option>
-<option>4</option>
-<option>5</option>
-<option>6</option>
-</select>
+            if (!origen || !destino) {
+                log.style.color = "red";
+                log.innerText = "❌ No se pudo extraer la recogida o el destino.";
+                return;
+            }
 
-<label>Método de pago</label>
-<select id="pago">
-<option>Efectivo</option>
-<option>Transferencia</option>
-</select>
+            log.style.color = "#111827";
+            log.innerText = "🗺️ Geolocalizando origen...";
+            const coordOrigen = await buscarCoordenadas(origen);
+            
+            if (!coordOrigen) {
+                log.style.color = "red";
+                log.innerText = "❌ No se localizó la recogida en el mapa.";
+                return;
+            }
 
-<textarea id="obs" placeholder="Observaciones (opcional)"></textarea>
+            log.innerText = "🗺️ Geolocalizando destino...";
+            const coordDestino = await buscarCoordenadas(destino);
+            
+            if (!coordDestino) {
+                log.style.color = "red";
+                log.innerText = "❌ No se localizó el destino en el mapa.";
+                return;
+            }
 
-<button onclick="enviarWhatsApp()">Reservar por WhatsApp</button>
-<a class="btn" onclick="enviarSMS()">Reservar por SMS</a>
-<a class="btn btn-call" href="tel:+5354632153">Llamar ahora</a>
+            log.style.color = "green";
+            log.innerText = "✅ ¡Ruta trazada con éxito!";
 
-</div>
+            trazarRuta(coordOrigen, coordDestino);
+        }
 
-</div>
+        async function buscarCoordenadas(direccion) {
+            // Refinamiento para procesamiento de direcciones cubanas
+            // Eliminamos "e/" y lo cambiamos por espacio para que Nominatim entienda intersecciones estándar
+            let limpia = direccion
+                .replace(/\s+e\/\s+/gi, ' ')
+                .replace(/\s+y\s+esq\.?\s+/gi, ' y ')
+                .split(',')[0]; // Nos quedamos con la primera parte de la cadena antes de metadatos del barrio
 
-<script>
+            let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(limpia + ", La Habana, Cuba")}&limit=1`;
 
-/* 📳 vibración táctil móvil */
-function vibrar(){
-if(navigator.vibrate){
-navigator.vibrate(80);
-}
-}
+            try {
+                const res = await fetch(url, { headers: { 'User-Agent': 'TriciclosLyLPanel/1.0' } });
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    return L.latLng(parseFloat(data[0].lat), parseFloat(data[0].lon));
+                }
+                return null;
+            } catch (error) {
+                console.error("Error en geocoding:", error);
+                return null;
+            }
+        }
 
-document.addEventListener("click",(e)=>{
-if(e.target.tagName === "BUTTON" || e.target.classList.contains("btn") || e.target.classList.contains("menu-trigger")){
-vibrar();
-}
-});
+        function trazarRuta(origenLngLat, destinoLngLat) {
+            if (routingControl !== null) {
+                map.removeControl(routingControl);
+            }
 
-/* MAPA GOOGLE */
-function openMaps(){
-if(navigator.geolocation){
-navigator.geolocation.getCurrentPosition(pos=>{
-const lat=pos.coords.latitude;
-const lng=pos.coords.longitude;
-window.open(`http://maps.google.com/?q=${lat},${lng}`,"_blank");
-});
-}else{
-window.open("http://maps.google.com/","_blank");
-}
-}
+            routingControl = L.Routing.control({
+                waypoints: [origenLngLat, destinoLngLat],
+                routeWhileDragging: false,
+                addWaypoints: false, 
+                draggableWaypoints: false,
+                fitSelectedRoutes: true, // Autoajusta el zoom del mapa para ver el viaje completo
+                lineOptions: {
+                    styles: [{ color: '#E63946', opacity: 0.8, weight: 6 }]
+                },
+                createMarker: function(i, waypoint, n) {
+                    const marcadorHtml = i === 0 ? '📍 Punto de Recogida' : '🏁 Destino Final';
+                    return L.marker(waypoint.latLng).bindPopup(marcadorHtml).openPopup();
+                }
+            }).addTo(map);
+        }
 
-/* CONTROL DEL MENÚ DE CABECERA */
-function toggleMenu() {
-const menu = document.getElementById("menuContent");
-if (menu.style.display === "block") {
-menu.style.display = "none";
-} else {
-menu.style.display = "block";
-}
-}
-
-/* CONTROL DE LOS SUBPANELES INTERNOS DEL MENÚ */
-function toggleInfoInterna(id) {
-const target = document.getElementById(id);
-const esVisible = target.style.display === "block";
-
-// Oculta los subpaneles para evitar solapamientos
-document.querySelectorAll('.desplegable-info').forEach(el => el.style.display = 'none');
-
-// Si no era visible antes, lo despliega
-if (!esVisible) {
-target.style.display = "block";
-}
-}
-
-/* MENSAJE AUTOMÁTICO DE RESERVA */
-function mensaje(){
-const g=id=>document.getElementById(id).value.trim();
-
-const nombre=g("nombre");
-const tel=g("tel");
-const origen=g("origen");
-const destino=g("destino");
-const pas=g("pas");
-const pago=g("pago");
-const obs=g("obs");
-
-if(!nombre||!tel||!origen||!destino||!pas||!pago){
-alert("Completa todos los campos obligatorios");
-return null;
-}
-
-return `🚖 NUEVA RESERVA
-
-👤 Nombre: ${nombre}
-📞 Teléfono: ${tel}
-📍 Recogida: ${origen}
-🏁 Destino: ${destino}
-👥 Pasajeros: ${pas}
-💳 Método de pago: ${pago}
-📝 Observaciones: ${obs||"Ninguna"}`;
-}
-
-/* COMPARTIR POR WHATSAPP */
-function enviarWhatsApp(){
-const m=mensaje();
-if(m){
-window.open("https://wa.me/5354632153?text="+encodeURIComponent(m));
-}
-}
-
-/* COMPARTIR POR SMS */
-function enviarSMS(){
-const m=mensaje();
-if(m){
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-const separador = isIOS ? '&' : '?';
-location.href="sms:+5354632153" + separador + "body=" + encodeURIComponent(m);
-}
-}
-
-</script>
-
+        window.onload = initMap;
+    </script>
 </body>
 </html>
