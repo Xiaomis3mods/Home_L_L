@@ -70,12 +70,19 @@
 
         textarea {
             width: 100%;
-            height: 140px;
-            padding: 12px;
+            height: 180px;
+            padding: 14px;
             border-radius: 8px;
-            border: 1px solid #D1D5DB;
-            font-size: 14px;
-            resize: none;
+            border: 2px solid #D1D5DB;
+            font-size: 15px;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.15);
         }
 
         button {
@@ -109,21 +116,32 @@
             color: #111827;
         }
 
+        .route-info {
+            background: #EFF6FF;
+            border: 1px solid #BFDBFE;
+            color: #1E40AF;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+        }
+
         .status {
             font-weight: bold;
             margin-top: 5px;
             font-size: 14px;
         }
 
-        /* Oculta la caja de texto con itinerarios de Leaflet Routing Machine */
         .leaflet-routing-container {
             display: none !important;
         }
 
         @media (max-width: 768px) {
             .main-container { flex-direction: column; }
-            .sidebar { width: 100%; height: 45%; }
-            .map-area { height: 55%; }
+            .sidebar { width: 100%; height: 50%; }
+            .map-area { height: 50%; }
         }
     </style>
 </head>
@@ -148,6 +166,11 @@
                 <p>🏁 <strong>Destino:</strong> <span id="det-destino">-</span></p>
             </div>
 
+            <div id="routeInfoBox" class="route-info">
+                <p>📏 <strong>Distancia:</strong> <span id="route-distancia">-</span></p>
+                <p>⏱️ <strong>Tiempo Est.:</strong> <span id="route-tiempo">-</span></p>
+            </div>
+
             <div id="statusLog" class="status" style="color: #6B7280;">Esperando mensaje...</div>
         </aside>
 
@@ -166,17 +189,37 @@
         const DEFAULT_LAT = 23.1136;
         const DEFAULT_LNG = -82.3666;
 
+        // Definición de iconos personalizados (Usa SVG en formato DataURL para no depender de imágenes externas)
+        const iconoRecogida = L.icon({
+            iconUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23111827" width="36" height="36"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>',
+            iconSize: [36, 36],
+            iconAnchor: [18, 36],
+            popupAnchor: [0, -32]
+        });
+
+        const iconoDestino = L.icon({
+            iconUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23E63946" width="38" height="38"><path d="M19 4H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM5 12h7V6H5v6zm7 6h7v-6h-7v6z"/></svg>',
+            iconSize: [38, 38],
+            iconAnchor: [5, 38], // Anclado a la base inferior izquierda del mástil de la bandera
+            popupAnchor: [12, -34]
+        });
+
         function initMap() {
             map = L.map('map', { zoomControl: true }).setView([DEFAULT_LAT, DEFAULT_LNG], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
+                attribution: '© OpenStreetMap contributors'
             }).addTo(map);
         }
+
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
 
         async function procesarMensaje() {
             const texto = document.getElementById('textoReserva').value;
             const log = document.getElementById('statusLog');
+            const infoBox = document.getElementById('routeInfoBox');
             
+            infoBox.style.display = "none";
+
             if (!texto.trim()) {
                 log.style.color = "red";
                 log.innerText = "❌ El cuadro de texto está vacío.";
@@ -187,8 +230,8 @@
             log.innerText = "🔍 Analizando texto...";
 
             const regexNombre = /(?:👤\s*Nombre:\s*|Nombre:\s*)(.+)/i;
-            const regexTel = /(?:📞\s*Teléfono:\s*|Teléfono:\s*)(.+)/i;
-            const regexOrigen = /(?:📍\s*Recogida:\s*|Recogida:\s*)(.+)/i;
+            const regexTel = /(?:📞\s*Teléfono:\s*|Teléfono:\s*|Celular:\s*)(.+)/i;
+            const regexOrigen = /(?:📍\s*Recogida:\s*|Recogida:\s*|Origen:\s*)(.+)/i;
             const regexDestino = /(?:🏁\s*Destino:\s*|Destino:\s*)(.+)/i;
 
             const nombre = texto.match(regexNombre)?.[1]?.trim() || "No detectado";
@@ -208,45 +251,53 @@
             }
 
             log.style.color = "#111827";
-            log.innerText = "🗺️ Geolocalizando origen...";
+            log.innerText = "🗺️ Geolocalizando recogida...";
             const coordOrigen = await buscarCoordenadas(origen);
             
             if (!coordOrigen) {
                 log.style.color = "red";
-                log.innerText = "❌ No se localizó la recogida en el mapa.";
+                log.innerText = `❌ No se localizó la recogida ("${origen}")`;
                 return;
             }
+
+            await sleep(600);
 
             log.innerText = "🗺️ Geolocalizando destino...";
             const coordDestino = await buscarCoordenadas(destino);
             
             if (!coordDestino) {
                 log.style.color = "red";
-                log.innerText = "❌ No se localizó el destino en el mapa.";
+                log.innerText = `❌ No se localizó el destino ("${destino}")`;
                 return;
             }
 
             log.style.color = "green";
-            log.innerText = "✅ ¡Ruta trazada con éxito!";
+            log.innerText = "⚡ Calculando mejor ruta...";
 
             trazarRuta(coordOrigen, coordDestino);
         }
 
         async function buscarCoordenadas(direccion) {
-            // Refinamiento para procesamiento de direcciones cubanas
-            // Eliminamos "e/" y lo cambiamos por espacio para que Nominatim entienda intersecciones estándar
             let limpia = direccion
-                .replace(/\s+e\/\s+/gi, ' ')
+                .replace(/\s+e\/\s+/gi, ' e/ ')
                 .replace(/\s+y\s+esq\.?\s+/gi, ' y ')
-                .split(',')[0]; // Nos quedamos con la primera parte de la cadena antes de metadatos del barrio
+                .replace(/No\s*\.?\s*\d+/gi, '')
+                .split('-')[0]
+                .split(',')[0]
+                .trim();
 
             let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(limpia + ", La Habana, Cuba")}&limit=1`;
 
             try {
-                const res = await fetch(url, { headers: { 'User-Agent': 'TriciclosLyLPanel/1.0' } });
+                const res = await fetch(url, { 
+                    headers: { 'User-Agent': 'TriciclosLyLPanelApp/3.0 (soporte@tricicloslyl.com)' } 
+                });
                 const data = await res.json();
                 if (data && data.length > 0) {
-                    return L.latLng(parseFloat(data[0].lat), parseFloat(data[0].lon));
+                    return {
+                        lat: parseFloat(data[0].lat),
+                        lng: parseFloat(data[0].lon)
+                    };
                 }
                 return null;
             } catch (error) {
@@ -255,25 +306,56 @@
             }
         }
 
-        function trazarRuta(origenLngLat, destinoLngLat) {
+        function trazarRuta(origenCoords, destinoCoords) {
             if (routingControl !== null) {
                 map.removeControl(routingControl);
             }
 
+            const p1 = L.latLng(origenCoords.lat, origenCoords.lng);
+            const p2 = L.latLng(destinoCoords.lat, destinoCoords.lng);
+
             routingControl = L.Routing.control({
-                waypoints: [origenLngLat, destinoLngLat],
+                waypoints: [p1, p2],
                 routeWhileDragging: false,
                 addWaypoints: false, 
                 draggableWaypoints: false,
-                fitSelectedRoutes: true, // Autoajusta el zoom del mapa para ver el viaje completo
+                fitSelectedRoutes: true,
                 lineOptions: {
                     styles: [{ color: '#E63946', opacity: 0.8, weight: 6 }]
                 },
+                // AQUÍ SE ASIGNAN LOS NUEVOS CURSORES/ICONOS
                 createMarker: function(i, waypoint, n) {
-                    const marcadorHtml = i === 0 ? '📍 Punto de Recogida' : '🏁 Destino Final';
-                    return L.marker(waypoint.latLng).bindPopup(marcadorHtml).openPopup();
+                    if (i === 0) {
+                        return L.marker(waypoint.latLng, { icon: iconoRecogida })
+                                .bindPopup('📍 <b>Punto de Recogida</b>');
+                    } else {
+                        return L.marker(waypoint.latLng, { icon: iconoDestino })
+                                .bindPopup('🏁 <b>Destino Final</b>').openPopup();
+                    }
                 }
             }).addTo(map);
+
+            routingControl.on('routesfound', function(e) {
+                const routes = e.routes;
+                const summary = routes[0].summary;
+                
+                const distanciaKm = (summary.totalDistance / 1000).toFixed(2);
+                const tiempoMin = Math.round(summary.totalTime / 60);
+
+                document.getElementById('route-distancia').innerText = `${distanciaKm} km`;
+                document.getElementById('route-tiempo').innerText = `${tiempoMin} min (Aprox.)`;
+                document.getElementById('routeInfoBox').style.display = "flex";
+                
+                const log = document.getElementById('statusLog');
+                log.style.color = "green";
+                log.innerText = "✅ ¡Ruta trazada con éxito!";
+            });
+
+            routingControl.on('routingerror', function(e) {
+                const log = document.getElementById('statusLog');
+                log.style.color = "red";
+                log.innerText = "❌ No se pudo trazar una ruta vial entre ambos puntos.";
+            });
         }
 
         window.onload = initMap;
